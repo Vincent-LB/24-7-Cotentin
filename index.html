@@ -123,7 +123,7 @@ var icons = {
   vegetables: icon("🥕"),
   seafood: icon("🦞"),
   meal: icon("🍲"),
-  farmProducts: icon("🐄"), // Logo vache pour les produits fermiers
+  farmProducts: icon("🐄"),
   grocery: icon("🛒")
 };
 
@@ -174,8 +174,15 @@ var points = [
 points.forEach(p => {
   var latOffset = (Math.random() - 0.5) * 0.0005;
   var lngOffset = (Math.random() - 0.5) * 0.0005;
-  var marker = L.marker([p[1] + latOffset, p[2] + lngOffset], { icon: icons[p[3]] })
-    .bindPopup("<strong>" + p[0] + "</strong><br/>" + (p[3] === "grocery" ? "Ouvert de 5h à 23h<br/>" : "") + "Distributeur 24/7");
+  var marker = L.marker([p[1] + latOffset, p[2] + lngOffset], { icon: icons[p[3]] });
+
+  // Ajout de la popup avec mention "Distributeur 24/7" uniquement pour les points ouverts 24h/24
+  if (p[3] === "grocery") {
+    marker.bindPopup("<strong>" + p[0] + "</strong><br/>Ouvert de 5h à 23h");
+  } else {
+    marker.bindPopup("<strong>" + p[0] + "</strong><br/>Distributeur 24/7");
+  }
+
   marker.type = p[3];
   markers.addLayer(marker);
   allMarkers.push(marker);
@@ -200,3 +207,4 @@ function filterMarkers(type) {
 
 </body>
 </html>
+
