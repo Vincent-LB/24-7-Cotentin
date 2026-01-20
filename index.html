@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<title>Distributeurs alimentaires 24/7 – Cotentin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
+<style>
+html, body { margin:0; padding:0; }
+#map { height:100vh; width:100%; }
+.legend {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  z-index: 1000;
+}
+.legend div {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.legend span {
+  width:22px;
+  text-align:center;
+  margin-right:8px;
+  font-size: 18px;
+}
+#filters {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  z-index: 1000;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+}
+#filters button {
+  margin-right: 5px;
+  margin-bottom: 5px;
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f9f9f9;
+  cursor: pointer;
+}
+#filters button:hover {
+  background: #e9e9e9;
+}
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="filters">
+  <button onclick="filterMarkers('all')">Tous</button>
+  <button onclick="filterMarkers('pizza')">Pizzas</button>
+  <button onclick="filterMarkers('tacos')">Tacos</button>
+  <button onclick="filterMarkers('bread')">Pain</button>
+  <button onclick="filterMarkers('icecream')">Glaces</button>
+  <button onclick="filterMarkers('vegetables')">Fruits & Légumes</button>
+  <button onclick="filterMarkers('seafood')">Fruits de mer</button>
+  <button onclick="filterMarkers('meal')">Plats préparés</button>
+  <button onclick="filterMarkers('farmProducts')">Produits fermiers</button>
+  <button onclick="filterMarkers('grocery')">Épiceries</button>
+</div>
+
+<div class="legend">
+  <div><span>🍕</span> Pizza automatique</div>
+  <div><span>🌮</span> Tacos automatique</div>
+  <div><span>🥖</span> Distributeur de pain</div>
+  <div><span>🍦</span> Glaces</div>
+  <div><span>🥕</span> Fruits & Légumes</div>
+  <div><span>🦞</span> Fruits de mer</div>
+  <div><span>🍲</span> Plats préparés</div>
+  <div><span>🐄</span> Produits fermiers</div>
+  <div><span>🛒</span> Épiceries</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
+<script>
+var map = L.map('map').setView([49.55, -1.60], 10);
+
+// Ajout des clusters pour regrouper les marqueurs proches
+var markers = L.markerClusterGroup();
+var allMarkers = [];
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap'
+}).addTo(map);
+
+// Fonction pour créer des icônes avec emojis
+function icon(emoji) {
+  return L.divIcon({
+    html: `<div style='font-size:18px'>${emoji}</div>`,
+    className: "",
+    iconSize: [20, 20],
+    iconAnchor: [10, 20]
+  });
+}
+
+// Icônes basées sur les emojis
+var icons = {
+  pizza: icon("🍕"),
+  tacos: icon("🌮"),
+  bread: icon("🥖"),
+  icecream: icon("🍦"),
+  vegetables: icon("🥕"),
+  seafood: icon("🦞"),
+  meal: icon("🍲"),
+  farmProducts: icon("🐄"), // Logo vache pour les produits fermiers
+  grocery: icon("🛒")
+};
+
+// Points avec adresses précises
+var points = [
+  // 🍕 PIZZAS
+  ["Pizza automatique – 12 Route de la Hague, 50440 Acqueville", 49.613101, -1.74225, "pizza"],
+  ["Pizza automatique – 11 Rue de la Hague, 50440 Beaumont-Hague", 49.66297, -1.857514, "pizza"],
+  ["Pizza automatique – 5 Rue de l'École Primaire, 50460 Digulleville", 49.671606, -1.734109, "pizza"],
+  ["Pizza automatique – 17 Rue Gautier, 50550 Saint-Vaast-la-Hougue", 49.588072, -1.267502, "pizza"],
+  ["Pizza automatique – 6 Avenue de la République, 50270 Barneville-Carteret", 49.379259, -1.785213, "pizza"],
+  ["Pizza automatique – 3 Rue de l'Ancien Garage, 50690 Martinvast", 49.6044, -1.6609, "pizza"],
+  ["Pizza automatique – 8 Rue de l'Abbé Saint Pierre, 50330 Saint-Pierre-Église", 49.668457, -1.405732, "pizza"],
+  ["Pizza automatique – 15 Rue de la Gare, 50360 Picauville", 49.378705, -1.422819, "pizza"],
+  ["Pizza automatique – 10 Rue de la Mairie, 50440 Vasteville", 49.594602, -1.773239, "pizza"],
+
+  // 🌮 TACOS
+  ["Distributeur de Tacos – 3 Route du Mont Fanu, 50700 Brix", 49.563191, -1.591372, "tacos"],
+
+  // 🥖 DISTRIBUTEURS DE PAIN
+  ["Distributeur de Pain – 5 Rue de la Mairie, 50670 Yvetot-Bocage", 49.491338, -1.501975, "bread"],
+  ["Distributeur de Pain – 12 Rue du Bourg, 50760 Jobourg", 49.684476, -1.906458, "bread"],
+  ["Distributeur de Pain – 8 Rue de l'Église, 50760 Tocqueville", 49.670599, -1.343399, "bread"],
+
+  // 🍦 GLACES
+  ["Distributeur Glaces – 2 Place du Marché, 50270 Barneville-Carteret", 49.365516, -1.76334, "icecream"],
+
+  // 🥕 FRUITS & LÉGUMES
+  ["Votre Potager Bio – 10 Rue des Jardins, 50760 Tocqueville", 49.6696, -1.3532, "vegetables"],
+  ["Distributeur de Fruits et Légumes – 5 Rue de la Fontaine, 50700 Saint-Floxel", 49.481303, -1.373555, "vegetables"],
+
+  // 🦞 FRUITS DE MER
+  ["Distributeur de Fruits de Mer – 3 Quai des Pêcheurs, 50550 Saint-Vaast-la-Hougue", 49.587372, -1.280977, "seafood"],
+
+  // 🍲 PLATS PRÉPARÉS
+  ["Les Petits Plats d'Arnaud – 18 Rue du Port, 50550 Saint-Vaast-la-Hougue", 49.586241, -1.264635, "meal"],
+  ["L'En Bar Quai – 25 Rue de la Mer, 50270 Barneville-Carteret", 49.381387, -1.752358, "meal"],
+
+  // 🐄 PRODUITS FERMIERS
+  ["Les Distributeurs de Tollevast – 10 Rue de la Ferme, 50470 Tollevast", 49.598191, -1.600585, "farmProducts"],
+
+  // 🛒 ÉPICERIES API
+  ["Épicerie Api – 15 Rue de l'Église, 50690 Couville", 49.557977, -1.66757, "grocery"],
+  ["Épicerie Api – 23 Rue du Centre, 50580 Vicq-sur-Mer", 49.694559, -1.409265, "grocery"]
+];
+
+// Ajout des marqueurs avec un léger décalage aléatoire pour éviter les chevauchements
+points.forEach(p => {
+  var latOffset = (Math.random() - 0.5) * 0.0005;
+  var lngOffset = (Math.random() - 0.5) * 0.0005;
+  var marker = L.marker([p[1] + latOffset, p[2] + lngOffset], { icon: icons[p[3]] })
+    .bindPopup("<strong>" + p[0] + "</strong><br/>" + (p[3] === "grocery" ? "Ouvert de 5h à 23h<br/>" : "") + "Distributeur 24/7");
+  marker.type = p[3];
+  markers.addLayer(marker);
+  allMarkers.push(marker);
+});
+
+map.addLayer(markers);
+
+// Fonction pour filtrer les marqueurs
+function filterMarkers(type) {
+  markers.clearLayers();
+  if (type === 'all') {
+    allMarkers.forEach(marker => markers.addLayer(marker));
+  } else {
+    allMarkers.forEach(marker => {
+      if (marker.type === type) {
+        markers.addLayer(marker);
+      }
+    });
+  }
+}
+</script>
+
+</body>
+</html>
